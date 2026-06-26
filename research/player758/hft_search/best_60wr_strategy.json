@@ -1,0 +1,323 @@
+{
+  "status": "RESEARCH_ONLY \u2014 not deployed to live scalp loop",
+  "window_7d": "2026-06-17 11:43:47+00:00 .. 2026-06-24 11:43:47+00:00",
+  "baseline_flip_7d": {
+    "trades": 59980,
+    "net_pnl": 41150.729999999785,
+    "return_pct": 4.115073000146063,
+    "win_rate": 0.45133377792597534,
+    "avg_pnl": 0.6860741913971288,
+    "median_hold_s": 4.0,
+    "max_dd_pct": -0.0021724651043553145,
+    "sharpe_15m": 1.273932033052726,
+    "trades_per_hour": 357.03266450060767
+  },
+  "best_strategy": {
+    "config": {
+      "lot_btc": 1.0,
+      "tp_usd": 1.75,
+      "sl_usd": 1.4,
+      "max_hold_s": 3.5,
+      "spread_bps": 0.0,
+      "entry_mode": "mom_micro",
+      "mom_fast_s": 2,
+      "mom_slow_s": 8,
+      "micro_thresh": 0.6,
+      "min_range_usd": 0.3,
+      "min_vol_z": -1.0,
+      "adverse_buffer_usd": 1.0,
+      "momentum_after_sl": true,
+      "flip_on_close": true,
+      "pause_after_sl_streak": 0,
+      "use_trailing_after_pct": 0.0,
+      "initial_equity": 1000000.0
+    },
+    "metrics_7d": {
+      "trades": 57638,
+      "net_pnl": 40548.98000000132,
+      "return_pct": 4.054897999983598,
+      "win_rate": 0.6377042923071585,
+      "avg_pnl": 0.703511225233376,
+      "median_hold_s": 3.0,
+      "max_dd_pct": -0.0023476902815677825,
+      "sharpe_15m": 2.2819605199847994,
+      "trades_per_hour": 343.09184255561894
+    }
+  },
+  "validation": {
+    "5d": {
+      "trades": 38425,
+      "net_pnl": 26848.050000000876,
+      "return_pct": 2.68480499999022,
+      "win_rate": 0.634430709173715,
+      "avg_pnl": 0.6987130774235751,
+      "median_hold_s": 3.0,
+      "max_dd_pct": -0.001221732269374165,
+      "sharpe_15m": 2.233019215937532,
+      "trades_per_hour": 320.2194520643078
+    },
+    "7d": {
+      "trades": 57638,
+      "net_pnl": 40548.98000000132,
+      "return_pct": 4.054897999983598,
+      "win_rate": 0.6377042923071585,
+      "avg_pnl": 0.703511225233376,
+      "median_hold_s": 3.0,
+      "max_dd_pct": -0.0023476902815677825,
+      "sharpe_15m": 2.2819605199847994,
+      "trades_per_hour": 343.09184255561894
+    },
+    "train_4d": {
+      "trades": 31397,
+      "net_pnl": 22181.160000000764,
+      "return_pct": 2.2181159999911992,
+      "win_rate": 0.6386278943848138,
+      "avg_pnl": 0.7064738669299858,
+      "median_hold_s": 3.0,
+      "max_dd_pct": -0.0023476902815677825,
+      "sharpe_15m": 2.023269122024856,
+      "trades_per_hour": 327.88602957174066
+    },
+    "test_3d": {
+      "trades": 26239,
+      "net_pnl": 18366.070000000556,
+      "return_pct": 1.836606999992374,
+      "win_rate": 0.6366096268912688,
+      "avg_pnl": 0.6999531232135583,
+      "median_hold_s": 3.0,
+      "max_dd_pct": -0.0012211923832383675,
+      "sharpe_15m": 2.783076697231004,
+      "trades_per_hour": 363.24217067618287
+    },
+    "spread_stress": {
+      "spread_0.0bps": {
+        "trades": 57638,
+        "net_pnl": 40548.98000000132,
+        "return_pct": 4.054897999983598,
+        "win_rate": 0.6377042923071585,
+        "avg_pnl": 0.703511225233376,
+        "median_hold_s": 3.0,
+        "max_dd_pct": -0.0023476902815677825,
+        "sharpe_15m": 2.2819605199847994,
+        "trades_per_hour": 343.09184255561894
+      },
+      "spread_0.05bps": {
+        "trades": 56062,
+        "net_pnl": 22985.296313847815,
+        "return_pct": 2.2985296313661863,
+        "win_rate": 0.5121472655274517,
+        "avg_pnl": 0.4099977937613324,
+        "median_hold_s": 4.0,
+        "max_dd_pct": -0.003016628568319746,
+        "sharpe_15m": 1.4870922302660265,
+        "trades_per_hour": 333.71065750638655
+      },
+      "spread_0.1bps": {
+        "trades": 55629,
+        "net_pnl": 6212.217504169441,
+        "return_pct": 0.6212217503972495,
+        "win_rate": 0.4833270416509375,
+        "avg_pnl": 0.11167228431518526,
+        "median_hold_s": 4.0,
+        "max_dd_pct": -0.06028353084258642,
+        "sharpe_15m": 0.41268307137399673,
+        "trades_per_hour": 331.13321262928145
+      },
+      "spread_0.15bps": {
+        "trades": 69780,
+        "net_pnl": -95018.29676880287,
+        "return_pct": -9.501829677040108,
+        "win_rate": 0.011708225852679851,
+        "avg_pnl": -1.3616838172657333,
+        "median_hold_s": 1.0,
+        "max_dd_pct": -9.501702979424277,
+        "sharpe_15m": -2.4429584635500547,
+        "trades_per_hour": 415.3674446290831
+      }
+    }
+  },
+  "hits_60wr_plus": 324,
+  "top5": [
+    {
+      "config": {
+        "lot_btc": 1.0,
+        "tp_usd": 1.75,
+        "sl_usd": 1.4,
+        "max_hold_s": 3.5,
+        "spread_bps": 0.0,
+        "entry_mode": "mom_micro",
+        "mom_fast_s": 2,
+        "mom_slow_s": 8,
+        "micro_thresh": 0.6,
+        "min_range_usd": 0.3,
+        "min_vol_z": -1.0,
+        "adverse_buffer_usd": 1.0,
+        "momentum_after_sl": true,
+        "flip_on_close": true,
+        "pause_after_sl_streak": 0,
+        "use_trailing_after_pct": 0.0,
+        "initial_equity": 1000000.0
+      },
+      "metrics_7d": {
+        "trades": 57638,
+        "net_pnl": 40548.98000000132,
+        "return_pct": 4.054897999983598,
+        "win_rate": 0.6377042923071585,
+        "avg_pnl": 0.703511225233376,
+        "median_hold_s": 3.0,
+        "max_dd_pct": -0.0023476902815677825,
+        "sharpe_15m": 2.2819605199847994,
+        "trades_per_hour": 343.09184255561894
+      }
+    },
+    {
+      "config": {
+        "lot_btc": 1.0,
+        "tp_usd": 1.75,
+        "sl_usd": 1.4,
+        "max_hold_s": 3.5,
+        "spread_bps": 0.0,
+        "entry_mode": "mom_micro",
+        "mom_fast_s": 2,
+        "mom_slow_s": 8,
+        "micro_thresh": 0.58,
+        "min_range_usd": 0.3,
+        "min_vol_z": -1.0,
+        "adverse_buffer_usd": 1.0,
+        "momentum_after_sl": true,
+        "flip_on_close": true,
+        "pause_after_sl_streak": 0,
+        "use_trailing_after_pct": 0.0,
+        "initial_equity": 1000000.0
+      },
+      "metrics_7d": {
+        "trades": 57661,
+        "net_pnl": 40545.830000001326,
+        "return_pct": 4.054582999983514,
+        "win_rate": 0.6376060075267512,
+        "avg_pnl": 0.7031759768301161,
+        "median_hold_s": 3.0,
+        "max_dd_pct": -0.0023477081742551142,
+        "sharpe_15m": 2.2831973469578593,
+        "trades_per_hour": 343.22875071306333
+      }
+    },
+    {
+      "config": {
+        "lot_btc": 1.0,
+        "tp_usd": 1.75,
+        "sl_usd": 1.4,
+        "max_hold_s": 3.5,
+        "spread_bps": 0.0,
+        "entry_mode": "mom_micro",
+        "mom_fast_s": 2,
+        "mom_slow_s": 8,
+        "micro_thresh": 0.56,
+        "min_range_usd": 0.3,
+        "min_vol_z": -1.0,
+        "adverse_buffer_usd": 1.0,
+        "momentum_after_sl": true,
+        "flip_on_close": true,
+        "pause_after_sl_streak": 0,
+        "use_trailing_after_pct": 0.0,
+        "initial_equity": 1000000.0
+      },
+      "metrics_7d": {
+        "trades": 57687,
+        "net_pnl": 40526.92000000132,
+        "return_pct": 4.0526919999835265,
+        "win_rate": 0.6373879730268518,
+        "avg_pnl": 0.7025312462080074,
+        "median_hold_s": 3.0,
+        "max_dd_pct": -0.002347709821981514,
+        "sharpe_15m": 2.2841801887946045,
+        "trades_per_hour": 343.3835164562613
+      }
+    },
+    {
+      "config": {
+        "lot_btc": 1.0,
+        "tp_usd": 1.75,
+        "sl_usd": 1.2,
+        "max_hold_s": 3.5,
+        "spread_bps": 0.0,
+        "entry_mode": "mom_micro",
+        "mom_fast_s": 2,
+        "mom_slow_s": 8,
+        "micro_thresh": 0.6,
+        "min_range_usd": 0.3,
+        "min_vol_z": -1.0,
+        "adverse_buffer_usd": 1.0,
+        "momentum_after_sl": true,
+        "flip_on_close": true,
+        "pause_after_sl_streak": 0,
+        "use_trailing_after_pct": 0.0,
+        "initial_equity": 1000000.0
+      },
+      "metrics_7d": {
+        "trades": 57652,
+        "net_pnl": 42056.85000000133,
+        "return_pct": 4.205685000037818,
+        "win_rate": 0.6373759800180393,
+        "avg_pnl": 0.7294950738916487,
+        "median_hold_s": 3.0,
+        "max_dd_pct": -0.001891994145719611,
+        "sharpe_15m": 2.2165254208149556,
+        "trades_per_hour": 343.17517795580244
+      }
+    },
+    {
+      "config": {
+        "lot_btc": 1.0,
+        "tp_usd": 1.75,
+        "sl_usd": 1.2,
+        "max_hold_s": 3.5,
+        "spread_bps": 0.0,
+        "entry_mode": "mom_micro",
+        "mom_fast_s": 2,
+        "mom_slow_s": 8,
+        "micro_thresh": 0.58,
+        "min_range_usd": 0.3,
+        "min_vol_z": -1.0,
+        "adverse_buffer_usd": 1.0,
+        "momentum_after_sl": true,
+        "flip_on_close": true,
+        "pause_after_sl_streak": 0,
+        "use_trailing_after_pct": 0.0,
+        "initial_equity": 1000000.0
+      },
+      "metrics_7d": {
+        "trades": 57676,
+        "net_pnl": 42054.70000000134,
+        "return_pct": 4.205470000037859,
+        "win_rate": 0.6372668007490118,
+        "avg_pnl": 0.7291542409321268,
+        "median_hold_s": 3.0,
+        "max_dd_pct": -0.0018920055669946478,
+        "sharpe_15m": 2.217671772504658,
+        "trades_per_hour": 343.3180386418314
+      }
+    }
+  ],
+  "paper_insights": {
+    "cartea_jaimungal_ssrn_2010417": [
+      "Trade WITH short-horizon momentum (informed flow impounds gradually; market orders cause jumps).",
+      "Avoid adverse selection: skip entries when last tick moved against intended side.",
+      "Keep inventory near zero \u2014 fast round-trips, no overnight."
+    ],
+    "mahdavi_damghani_oxford_man": [
+      "Microprice proxy: close-in-range (CIR) approximates bid/ask volume imbalance on 1s bars.",
+      "Long only when CIR >= threshold (close near high); short when CIR <= 1-threshold.",
+      "Multi-scale momentum agreement filters noise."
+    ]
+  },
+  "live_implementation_notes": [
+    "Do NOT change running scalp until user approves.",
+    "Add entry_mode=mom_micro: require mom_2s and mom_5s same sign AND CIR confirms.",
+    "Lower TP to $2.00/lot (from $3.67) \u2014 closer target lifts WR.",
+    "Tighten SL to $1.20/lot; max_hold 3.0s.",
+    "Skip flat bars (range < $0.30).",
+    "Optional: spread filter \u2014 WR collapses above ~0.1 bps in backtest."
+  ],
+  "elapsed_s": 1665.9
+}

@@ -1,0 +1,10 @@
+strategy=Leaderboard-Optimized Tournament (COC + R3 flat)
+mode=r1
+rounds=4
+avg_return_pct=2.719
+min_return_pct=-0.884
+avg_sharpe_15m=0.0433
+total_trades=19
+all_rounds_positive=False
+risk_discipline_clean=True
+avg_judge_score=53.50

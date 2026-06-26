@@ -1,0 +1,9 @@
+strategy=Multi-Sleeve Tournament (COC + MR)
+mode=full
+rounds=19
+avg_return_pct=1.393
+min_return_pct=-2.805
+avg_sharpe_15m=0.0361
+total_trades=416
+all_rounds_positive=False
+risk_discipline_clean=True

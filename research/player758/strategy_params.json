@@ -1,0 +1,19 @@
+{
+  "symbol": "BTCUSD",
+  "lot_size": 1.0,
+  "mode": "ping_pong_scalp",
+  "min_hold_seconds": 0.03,
+  "median_hold_seconds": 4.051,
+  "p90_hold_seconds": 13.655700000000003,
+  "tp_usd_median": 3.67,
+  "tp_usd_p75": 7.86,
+  "sl_usd_median": -1.585,
+  "sl_usd_p90": -7.846999999999996,
+  "trade_interval_median_s": 4.041,
+  "win_rate": 0.6549432290224314,
+  "avg_pnl_usd": 3.5393215175851567,
+  "trades_per_hour": 216.2404274971915,
+  "active_from": "2026-06-22 09:01:31.492000+00:00",
+  "active_to": "2026-06-24 11:07:20.747000+00:00",
+  "notes": "High-frequency BTC 1-lot ping-pong; each API row is a closing fill with realized_pnl."
+}

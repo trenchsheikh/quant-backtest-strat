@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "algorithmic-art": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/algorithmic-art/SKILL.md",
+      "computedHash": "46f0241af98412a7667bdef284afa29e471dbbf29c577bd8744ec94304f12332"
+    },
+    "backtesting-frameworks": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/quantitative-trading/skills/backtesting-frameworks/SKILL.md",
+      "computedHash": "792069fc176d944805f2136a8f98aa7c77ef138c25678baa03d282c5fe18159a"
+    }
+  }
+}
