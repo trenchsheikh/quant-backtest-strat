@@ -1,182 +1,255 @@
-# MoMQ Tournament Backtest
+# MoMQ — Quant Backtest & Live Trading Stack
 
-Multi-sleeve competition strategy aligned to **`rules.md`** round schedule (22:00 BST → +24h per round, Finals +48h).
+A complete quantitative trading system built for the **MoMQ MT5 trading competition**:
+a multi-strategy backtest engine, a high-frequency BTC scalper, and a production
+live-execution stack that turns backtested signals into real MetaTrader 5 orders.
 
-## Competition schedule
+Everything is driven by the official competition rules in [`rules.md`](rules.md) and the
+leaderboard scoring formula below.
 
-| Round | Live dates (2026) | Window |
-|-------|-------------------|--------|
-| **R1** | 21 Jun 22:00 → 22 Jun 22:00 | 24h |
-| **R2** | 22 Jun 22:00 → 23 Jun 22:00 | 24h |
-| **R3** | 23 Jun 22:00 → 24 Jun 22:00 | 24h |
-| **Finals** | 24 Jun 22:00 → 26 Jun 22:00 | 48h |
+```
+Final Score = 70% Return Rank + 15% Drawdown Rank + 10% Sharpe Rank + 5% Risk Discipline
+```
 
-Backtest uses **proxy windows** in the May–Jun tick data (same day-of-week / hour pattern as the live competition).
+Sharpe is computed from **15-minute equity returns** (non-annualized). Risk Discipline
+starts at 100 and loses points for sustained leverage / margin / concentration breaches.
 
 ---
 
-## Scoring formula (rules §11)
+## Table of contents
 
-```
-Final Score = 70% × Return Rank + 15% × Drawdown Rank + 10% × Sharpe Rank + 5% × Risk Discipline
-```
-
-Sharpe is computed from **15-minute equity returns**, non-annualized. Risk Discipline starts at 100 and loses points for sustained leverage/margin/concentration breaches.
-
----
-
-## Strategy — three sleeves
-
-| Sleeve | Leverage | When active | Logic |
-|--------|----------|-------------|-------|
-| **COC** — Contrarian Open Carry | 22x | R1, R2, Finals (+ banked at +24h in Finals) | At round open, rank 12h pre-round return across 6 competition forex majors. Long the 2 weakest / short the 1 strongest. **Vol-parity sized** so each leg contributes equal expected P&L. |
-| **MTF** — Crypto Momentum | 6x | All rounds; **sole alpha for R3** | EMA(4) vs EMA(16) crossover on BTC/ETH/SOL/XRP 15m bars. Opens after bar 8 (2h). Exits on stop-loss (-1.8% equity), EMA reversal, or 6h max hold. |
-| **CSS** — Correlation Spread | 3x | R1 (full), R2 (70%) | Dollar-neutral log-spread z-reversion. R1: EURUSD/USDCHF. R2: AUDUSD/USDCAD. Entry |z| > 1.6, exit |z| < 0.10. |
-
-**Total leverage cap: 25x** (well under the 28x Risk Discipline penalty threshold).
-
-**COC universe** (all 6 are in the competition instrument list):
-`EURUSD, GBPUSD, USDCAD, USDJPY, AUDUSD, USDCHF`
-
-**MTF note**: The provided tick data does not include crypto. MTF shows zero contribution in backtest but will fire on BTC/ETH/SOL/XRP/BAR in the live competition. Expected live addition: +3–5% in trending crypto rounds.
+- [What's inside](#whats-inside)
+- [Trading strategies](#trading-strategies)
+- [High-frequency trading (HFT)](#high-frequency-trading-hft)
+- [Backtest results](#backtest-results)
+- [Technologies used](#technologies-used)
+- [Quick start](#quick-start)
+- [Live execution](#live-execution)
+- [Repository layout](#repository-layout)
+- [Testing](#testing)
+- [Disclaimer](#disclaimer)
 
 ---
 
-## Backtest results (19 rounds, May–Jun 2026)
+## What's inside
 
-COC now exits at +0.30% price move (take-profit), re-enters same direction after 15 min, then holds to EOD. This generates more trades and smoother equity curves on trending rounds.
+This repo has three pillars that share a single signal library so there is **no logic
+duplication** between research and production:
 
-| Round type | Avg return | Min return | Avg Sharpe (15m) | RD clean |
-|------------|------------|------------|------------------|----------|
-| **R1** (Sun→Mon) | +2.72% | −0.88% | +0.043 | Yes |
-| **R2** (Mon→Tue) | +2.82% | **+0.16%** | +0.070 | Yes |
-| **R3** (Tue→Wed) | 0.00% | 0.00% | 0.000 | Yes |
-| **Finals** (48h) | +3.78% | +0.57% | +0.065 | Yes |
-
-**Aggregate (all 19 rounds):**
-- Avg return / round: **+2.31%**
-- Best single round: **+8.99%** (R1, 17 May)
-- Best 4-round weekly path: **+17.41%** (17–20 May)
-- Total trades: **59** (was 43) | Risk Discipline: **100/100 on every round**
-- **R2 all-positive**: min was −1.37%, now +0.16% — no more losing R2 rounds in backtest
-
-R3 returns 0% in backtest (no crypto data). Live R3 returns will be driven by MTF.
+| Pillar | What it does | Entry point |
+|--------|--------------|-------------|
+| **Backtest engine** | Replays historical tick data through the strategies and scores each round exactly like the competition judge. | [`run_tournament.py`](run_tournament.py) |
+| **HFT scalp research** | Reverse-engineers the leaderboard leader, then searches for a higher win-rate BTC micro-scalp. | [`scripts/`](scripts), [`research/`](research) |
+| **Live execution** | Runs the strategies in real time against MT5 with a safety bridge, watchdog, and kill-switch. | [`live/`](live/README.md) |
 
 ---
 
-## Quick start — run the backtest yourself
+## Trading strategies
 
-### 1. Install dependencies (once)
+The core engine runs **three independent "sleeves"**, each targeting a different market
+regime. Signals live in [`momq/signals.py`](momq/signals.py); all parameters live in
+[`momq/tournament_config.py`](momq/tournament_config.py).
 
-```powershell
-cd d:\quant-backtest-strat
-py -3.10 -m pip install -r requirements.txt
-```
+| Sleeve | Name | Market | Idea | Leverage |
+|--------|------|--------|------|----------|
+| **COC** | Contrarian Open Carry | Forex + gold | At round open, rank the 12h pre-round return across the majors. Long the 2 weakest, short the 1 strongest — a mean-reversion bet, **inverse-vol sized** so every leg contributes equal expected P&L. | 22x |
+| **MTF** | Momentum Trend Follow | Crypto (BTC/ETH/SOL/XRP) + metals | EMA(4) vs EMA(16) crossover on 15m bars. Crypto *trends* within a round while forex *reverts*. Opens after warmup, exits on stop-loss, EMA reversal, take-profit, trailing stop, or max hold. | 6x |
+| **CSS** | Correlation Spread | Forex pairs | Dollar-neutral log-spread z-score mean-reversion between correlated pairs (e.g. EURUSD/USDCHF). Enter on `|z| > 1.6`, exit on `|z| < 0.10`. | 3x |
 
-If you don't have Python 3.10, install from [python.org](https://www.python.org/downloads/).
-
-### 2. Full tournament backtest (recommended)
-
-Runs all four round types (R1 + R2 + R3 + Finals) using the May–Jun proxy windows:
-
-```powershell
-py -3.10 run_tournament.py --data .\backtest-data --panel .\panel --skip-resample --out .\bt_results
-```
-
-Outputs: `bt_results/rounds_summary.csv`, `bt_results/trades.csv`, and per-round equity CSVs.
-
-### 3. R1-only mode (fastest, ~5 seconds)
-
-```powershell
-py -3.10 run_tournament.py --data .\backtest-data --panel .\panel --skip-resample --mode r1 --out .\bt_r1
-```
-
-### 4. First run without pre-built panel (resamples ticks, ~2–3 min)
-
-If the `panel/` folder is empty or missing, drop `--skip-resample`:
-
-```powershell
-py -3.10 run_tournament.py --data .\backtest-data --panel .\panel --out .\bt_results
-```
-
----
-
-## What the output means
-
-```
-[round_1 ] 2026-05-17 -> 2026-05-18  ret=+9.76%  sharpe=+0.127  judge=88.0  trades=3  RD=100
-    coc      pnl=+98,792
-```
-
-| Field | Description |
-|-------|-------------|
-| `ret` | Total return for that 24h/48h round (from $1M base) |
-| `sharpe` | Non-annualized Sharpe from 15m equity returns (rules §12.5) |
-| `judge` | Composite score 0–100 vs a synthetic field of 6 (rules §11) |
-| `trades` | Closed trades in that round |
-| `RD` | Risk Discipline score (100 = clean, deductions for leverage/margin breaches) |
-
-**Weekly tournament paths** at the bottom show what your cumulative return would be if you qualified through all 4 rounds in a given week.
-
----
-
-## Tuning parameters
-
-All parameters live in `momq/tournament_config.py`:
-
-| Parameter | Default | Effect |
-|-----------|---------|--------|
-| `budget.coc` | 22.0 | COC leverage (reduce if you want lower drawdown) |
-| `budget.mtf` | 6.0 | MTF crypto leverage (lives within total_cap) |
-| `budget.total_cap` | 25.0 | Hard gross leverage cap; Portfolio.can_add() enforces this |
-| `coc_pre_window` | 48 | Bars of pre-round history to rank (48 × 15m = 12h) |
-| `coc_n_long` | 2 | How many symbols to go long |
-| `coc_n_short` | 1 | How many symbols to short |
-| `spread_z_entry` | 1.6 | CSS entry threshold (higher = fewer, higher-conviction trades) |
-| `mtf_fast` / `mtf_slow` | 4 / 16 | EMA periods for crypto momentum signal |
-| `mtf_stop_pct` | 0.018 | Stop-loss: close MTF if position loses >1.8% of equity |
-| `r3_mtf_scale` | 1.0 | MTF budget scale for R3 (1.0 = full, 0.0 = flat) |
-
----
-
-## File map
-
-```
-run_tournament.py          CLI entry point — argument parsing, output formatting
-momq/
-  signals.py               COC, MTF, CSS signal generators (the algorithm)
-  tournament_engine.py     Bar loop, position lifecycle, BarContext wiring
-  tournament_config.py     All parameters and sleeve budgets
-  judge.py                 Exact rules.md §11–13 scoring (Return/DD/Sharpe/RD ranks)
-  risk_monitor.py          §13 breach tracker (margin, leverage, concentration)
-  metrics.py               Scorecard computation
-  resample.py              Tick parquet → 15m panel (DuckDB)
-backtest-data/             Raw tick parquets (May–Jun 2026, 22 symbols)
-panel/                     Pre-built 15m panels (auto-created, skip-resample reuses)
-rules.md                   Official competition rules (authoritative)
-```
-
----
-
-## Architecture overview
-
-```
-signals.py          →  proposes TradeIntents every bar
-tournament_engine.py  →  executes intents, manages exits, tracks telemetry
-judge.py            →  scores the round per rules.md §11–13
-```
+**Total gross leverage is capped at 25x** — comfortably under the 28x Risk Discipline
+penalty threshold, enforced by the engine on every bar.
 
 **Signal flow per bar:**
-1. COC fires at bar 0 only — ranks pre-round momentum, opens 3 vol-parity legs
-2. MTF fires from bar 8 onward — checks EMA crossover on all available crypto
-3. CSS fires from bar 4 onward — checks z-score on the round's correlation pair
-4. Engine sorts intents by priority (COC=10 > MTF=7 > CSS=5) and executes within leverage cap
+1. **COC** fires at the round open (bar 0), then has a catch-up path if the system started late.
+2. **MTF** fires after warmup, taking up to N concurrent momentum legs.
+3. **CSS** fires from bar 4 onward, checking the z-score on each round's correlation pair.
+4. The engine sorts intents by priority (`COC > MTF > CSS`) and executes within the leverage cap.
 
 ---
 
-## Before you trust the numbers
+## High-frequency trading (HFT)
 
-- **No crypto in backtest data** — R3 shows 0% because BTC/ETH/SOL/XRP aren't in the parquets. Live competition includes crypto; MTF adds real alpha there.
-- **Walk forward** — the 19 rounds are proxies. Don't tune parameters to these specific windows, then claim the numbers as forward-looking.
-- **Stress costs** — in `tournament_config.py`, push `spread_haircut` from 2.0 to 3.0 and re-run. If the edge holds, it's real.
-- **XAU scale note** — backtest gold is per-kg (`XAUKUSD` aliased to `XAUUSD`). Live sizing must use the platform's contract specs.
+Separate from the 15-minute brain, the repo includes a **sub-second BTC scalper** built
+from research on the live leaderboard.
+
+**1. Reverse-engineering the leader ([`research/player758/`](research/player758/STRATEGY.md))**
+Pulled 12,649 trades from the competition API and classified the #1 player as a
+**BTC ping-pong micro-scalp**: single instrument, ~1 BTC clips, ~4-second median holds,
+thousands of small wins. Replicated in [`momq/btc_scalp.py`](momq/btc_scalp.py).
+
+**2. Searching for a better edge ([`research/player758/hft_search/`](research/player758/hft_search/HFT_STRATEGY.md))**
+Applied microstructure research (Cartea & Jaimungal on short-horizon momentum and
+adverse-selection avoidance; Mahdavi-Damghani on microprice / order-flow proxies) to lift
+win rate from ~45% to **~61%**. The champion `mom_micro` mode only enters when 2s + 5s
+momentum agree *and* a close-in-range microprice filter confirms.
+
+**Key honest finding:** on public Binance 1s data these scalps only stay profitable at
+near-zero spread — the edge depends on the competition's tight sim fills. The HFT research
+is **gated behind a feature flag and is not live by default**; paper-trade and measure
+real spread first.
+
+---
+
+## Backtest results
+
+Aggregated over 19 proxy rounds (May–Jun 2026 tick data, $1M base):
+
+| Round type | Avg return | Avg Sharpe (15m) | Risk Discipline |
+|------------|------------|------------------|-----------------|
+| **R1** (Sun→Mon) | +2.72% | +0.043 | 100/100 |
+| **R2** (Mon→Tue) | +2.82% | +0.070 | 100/100 |
+| **R3** (Tue→Wed) | 0.00%* | 0.000 | 100/100 |
+| **Finals** (48h) | +3.78% | +0.065 | 100/100 |
+
+- Average return / round: **+2.31%**
+- Best single round: **+8.99%**
+- Best 4-round weekly path: **+17.41%**
+- Risk Discipline: **100/100 on every round**
+
+\* R3 shows 0% in backtest because the historical tick data has no crypto — MTF (the R3
+alpha) has nothing to trade. It fires on crypto live.
+
+Run the numbers yourself with the commands below; raw per-round CSVs land in the output
+directory.
+
+---
+
+## Technologies used
+
+| Area | Tools |
+|------|-------|
+| **Language** | Python 3.10 |
+| **Data / compute** | `pandas`, `numpy`, `pyarrow`, `duckdb` (tick parquet → 15m panel resampling) |
+| **Live bridge / API** | `FastAPI` + `uvicorn` (local order bridge), `httpx` |
+| **Brokerage integration** | `MetaTrader5` (MT5 terminal API) |
+| **Config / validation** | `pydantic`, `pydantic-settings`, `python-dotenv` |
+| **Reliability** | `filelock` (state/singleton locks), watchdog process supervision, atomic state journaling |
+| **Observability** | `logfire` (optional) |
+| **Data sources** | Competition tick parquets, Binance 1s OHLCV (HFT research), competition trade API |
+| **Testing** | `pytest` |
+
+Backtest dependencies are in [`requirements.txt`](requirements.txt); the live stack adds
+its own in [`live/requirements.txt`](live/requirements.txt).
+
+---
+
+## Quick start
+
+### 1. Install dependencies
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 2. Run the full tournament backtest
+
+Runs all four round types (R1 + R2 + R3 + Finals) over the proxy windows:
+
+```bash
+python run_tournament.py --data ./backtest-data --panel ./panel --skip-resample --out ./bt_results
+```
+
+Outputs `rounds_summary.csv`, `trades.csv`, and per-round equity CSVs to `bt_results/`.
+
+### 3. Fast R1-only run
+
+```bash
+python run_tournament.py --data ./backtest-data --panel ./panel --skip-resample --mode r1 --out ./bt_r1
+```
+
+### 4. First run (no pre-built panel)
+
+If `panel/` is empty, drop `--skip-resample` to resample the raw ticks first (~2–3 min):
+
+```bash
+python run_tournament.py --data ./backtest-data --panel ./panel --out ./bt_results
+```
+
+> Tip: tuning lives entirely in [`momq/tournament_config.py`](momq/tournament_config.py) —
+> leverage budgets, EMA periods, z-score thresholds, stops, and round scheduling.
+
+---
+
+## Live execution
+
+The [`live/`](live/README.md) package runs the strategies against a real MT5 account
+through a safety-first architecture:
+
+```
+brain (15m loop) ──▶ FastAPI bridge ──▶ MetaTrader 5
+       ▲                   │
+   watchdog            kill-switch
+ (supervises)        (HTTP / file / PID)
+```
+
+- **Bridge** — local FastAPI service that talks to the MT5 terminal and exposes health,
+  account, positions, and quote endpoints.
+- **Brain** — the 15-minute bar loop that imports the *same* `momq` signals used in
+  backtest, with a separate fast loop for the BTC scalp.
+- **Watchdog** — supervises the bridge and brain, restarting on crash.
+- **Risk engine** — enforces the 25x cap and pre-emptively blocks entries before any
+  Risk Discipline penalty threshold.
+- **Kill-switch** — three independent ways to halt and flatten instantly.
+- **State persistence** — atomic journaling with reconcile-on-restart (MT5 is ground truth).
+
+Ships in **paper mode by default** (`ENTRY_ENABLED=false`) — no real orders until you
+explicitly enable it. Full setup, boot sequence, monitoring, and go-live checklist are in
+**[`live/README.md`](live/README.md)**.
+
+---
+
+## Repository layout
+
+```
+run_tournament.py        Tournament backtest CLI (R1/R2/R3/Finals)
+run.py                   Single-window backtest CLI
+rules.md                 Official competition rules (authoritative)
+requirements.txt         Backtest dependencies
+
+momq/                    Strategy + engine core
+  signals.py             COC / MTF / CSS signal generators (the algorithm)
+  tournament_engine.py   Bar loop, position lifecycle, telemetry
+  tournament_config.py   All parameters and sleeve budgets
+  judge.py               Exact rules.md scoring (return/DD/Sharpe/RD ranks)
+  risk_monitor.py        Breach tracker (margin, leverage, concentration)
+  metrics.py             Scorecard computation
+  resample.py            Tick parquet -> 15m panel (DuckDB)
+  btc_scalp.py           BTC ping-pong scalp (player #758 replica)
+  hft_scalp_research.py  HFT entry modes (microprice + momentum, research)
+
+live/                    Live execution stack (see live/README.md)
+  bridge/                FastAPI <-> MT5 order bridge
+  brain/                 Bar loop, scalp loop, risk, reconcile
+  watchdog.py            Process supervisor
+  preflight.py           Pre-launch safety checks
+
+scripts/                 Research + backtest tooling (HFT search, fetchers, dashboard)
+research/                Player reverse-engineering + strategy notes
+tests/                   pytest suite (RD compliance, finals playbook, order utils)
+```
+
+---
+
+## Testing
+
+```bash
+python -m pytest tests/ -v
+```
+
+Covers Risk Discipline compliance, the Finals bar-split playbook, and order utilities.
+
+---
+
+## Disclaimer
+
+This is competition / research software, not financial advice. Backtested results are not
+a promise of live performance:
+
+- **No crypto in the historical tick data** — R3 reads 0% in backtest; live crypto returns
+  come from MTF.
+- **Proxy windows** — the backtest rounds approximate the live schedule; don't overfit
+  parameters to them.
+- **Spread sensitivity** — the HFT scalps depend on very tight fills and can bleed at
+  realistic spreads. Always paper-trade first.
+
+Trade at your own risk.
